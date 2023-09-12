@@ -1,6 +1,6 @@
 from Bounds import Bounds
-from Layer import Layer
+from Print import Print
 
-bounds = Bounds((10,10), (200,189))
-layer = Layer(bounds, 3, 2080)
-layer.plot_points()
+bounds = Bounds((0,0), (6,6))
+printobj = Print(bounds, 1, 45, 6, 0.3, 420)
+printobj.generate_gcode(print = True)

@@ -1,15 +1,14 @@
 import math
-
-import numpy as np
 import matplotlib.pyplot as plt
 from Line import Line
 
 class Layer:
-    def __init__(self, bounds, spacing, rotation = 0):
+    def __init__(self, bounds, spacing, layer_height, rotation = 0):
         # initialise list of lines
         self.spacing = spacing
         self.bounds = bounds
         self.rotation = rotation
+        self.layer_height = layer_height
         self.line_list = self.generate_lines(rotation, bounds, spacing)
 
     def generate_lines(self, rotation, bounds, spacing):
@@ -23,8 +22,18 @@ class Layer:
                 break
             start_point = self.step_start(rotation, bounds, spacing, start_point)
             end_point = self.step_end(rotation, bounds, spacing, end_point)
+        line_list = self.stitch_lines(line_list)
         return line_list
 
+    def stitch_lines(self, line_list):
+        for i, line in enumerate(line_list):
+            if i % 2 == 1:
+                line.flip_line()
+
+        for i, line in enumerate(line_list):
+            if (i != len(line_list) - 1):
+                line.set_next_line(line_list[i+1])
+        return line_list
 
     def step_start(self, rotation, bounds, spacing, start_point, half = False):
         start_point_return = start_point[:]
@@ -148,21 +157,30 @@ class Layer:
         return current_coordinate_start, current_coordinate_end
 
     def plot_points(self):
+        plt.clf()
         for line in self.line_list:
             x = []
             y = []
             x.append(line.get_start()[0])
             y.append(line.get_start()[1])
-
             x.append(line.get_end()[0])
             y.append(line.get_end()[1])
+
             plt.xlim([self.bounds.get_c1()[0] - 20, self.bounds.get_c2()[0] + 20])
             plt.ylim([self.bounds.get_c1()[1] - 20, self.bounds.get_c2()[1] + 20])
+            plt.title(f"Layer at z = {self.layer_height:.3f}")
             plt.plot(x, y, marker="o")
 
 
-    def generate_gcode(self):
-        pass
+
+    def generate_gcode(self, feed_rate, extruderpos = 0):
+        header = f"G1 Z{self.layer_height:.4f} F{feed_rate:.4f}\nG1 X{self.line_list[0].start[0]:.4f} Y{self.line_list[0].start[1]:.4f} F{feed_rate:.4f}\n"
+        bufferstring = header
+        extruderpos_new = extruderpos
+        for line in self.line_list:
+            extruderpos_new, gcode = line.generate_gcode(extruderpos_new)
+            bufferstring += gcode
+        return extruderpos_new, bufferstring
 
     def get_rotation(self):
         pass
