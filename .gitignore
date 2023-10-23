@@ -3,3 +3,9 @@
 /png/
 __pycache__/
 .ipynb_checkpoints
+*.ipynb
+*.gif
+*.png
+*.xlsx
+*.csv
+*.gcode
